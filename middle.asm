@@ -71,6 +71,10 @@ main:
 
     end_if:
 
+    li $v0, 4
+    la $a0, result
+    syscall
+
     bge $t3, $t4, t3
 
     move $a0, $t4
@@ -81,10 +85,6 @@ main:
         move $a0, $t3
 
     print_result:
-
-    li $v0, 4
-    la $a0, result
-    syscall
 
     li $v0, 1
     syscall
