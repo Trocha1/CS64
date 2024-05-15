@@ -83,50 +83,63 @@ conv:
 
 
 conv2d:
+    sub $sp $sp 28
+    sw $s0 0($sp)
+    sw $s1 4($sp)
+    sw $s2 8($sp)
+    sw $s3 12($sp)
+    sw $s4 16($sp)
+    sw $s5 20($sp)
+    sw $s6 24($sp)
+    
     move $s0 $a0
     move $s1 $a1
     move $s2 $a2
     move $s3 $a3
 
-    li $t0 3
+    li $t0 12
     addi $t1 $s0 -2
     addi $t2 $s1 -2
 
     li $t3 0
-    ble $t1 $t3 return
-    ble $t2 $t3 return
+    ble $t1 $t3 return_2d
+    ble $t2 $t3 return_2d
+
+    sll $s0 $s0 2
+    sll $s1 $s1 2
+    sll $t1 $t1 2
+    sll $t2 $t2 2
 
     mult $t1 $t2
-    mflo $t3
-    sll $s4 $t3 2
+    mflo $s4
 
-    sub $sp $sp $t4
+    sub $sp $sp $s4
 
     li $s5 0
     loop_2d:
-        beq $s5 $t1 return_2d
+        beq $s5 $t1 end_loop_2d
 
         li $t3 0
-        intialize_loop:
+        initialize_loop:
             beq $t3 $t2 initialized
 
             mult $s5 $t2
             mflo $t4
             add $t4 $t4 $t3 
-            sll $t4 $t4 2
             add $t4 $sp $t4
             li $t5 0
 
             sw $t5 0($t4)
 
-            addi $t3 1
+            addi $t3 4
+            j initialize_loop
         
         initialized:
 
         li $s6 0
 
         filter_loop:
-            beq $s6 $t0 end_loop_2d
+            beq $s6 $t0 end_filter_loop
 
             add $t3 $s5 $s6
             mult $t3 $s1
@@ -143,43 +156,33 @@ conv2d:
 
             move $a3 $t2
 
-            sub $sp $sp 36
 
+            sub $sp $sp 4
             sw $ra 0($sp)
-            sw $s0 4($sp)
-            sw $s1 8($sp)
-            sw $s2 12($sp)
-            sw $s3 16($sp)
-            sw $s4 20($sp)
-            sw $s5 24($sp)
-            sw $s6 28($sp)
-
             jal conv
-
             lw $ra 0($sp)
-            lw $s0 4($sp)
-            lw $s1 8($sp)
-            lw $s2 12($sp)
-            lw $s3 16($sp)
-            lw $s4 20($sp)
-            lw $s5 24($sp)
-            lw $s6 28($sp)
+            add $sp $sp 4
 
-            li $t0 3
+
+
+            li $t0 12
             addi $t1 $s0 -2
             addi $t2 $s1 -2
+            sll $t1 $t1 2
+            sll $t2 $t2 2
 
-            add $sp $sp 36
 
-            addi $s6 $s6 1
+            addi $s6 $s6 4
+            j filter_loop
 
-        end_loop_2d:
+        end_filter_loop:
+            addi $s5 $s5 4
+            j loop_2d
+    end_loop_2d:
 
         li $t3 0
-        mult $t1 $t2
-        mflo $t4
         print_loop:
-            beq $t3 $t4 loop_2d
+            beq $t3 $s4 return_2d
 
             add $t5 $sp $t3
             lw $a0 0($t5)
@@ -190,9 +193,21 @@ conv2d:
             li $v0 4
             syscall
 
-            addi $t3 1
+            addi $t3 4
+            j print_loop
 
     return_2d:
+        add $sp $sp $s4
+        lw $s0 0($sp)
+        lw $s1 4($sp)
+        lw $s2 8($sp)
+        lw $s3 12($sp)
+        lw $s4 16($sp)
+        lw $s5 20($sp)
+        lw $s6 24($sp)
+
+        add $sp $sp 28
+
         jr $ra
 
 main:
